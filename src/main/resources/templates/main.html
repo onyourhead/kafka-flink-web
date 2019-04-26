@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>异常检测</title>
+    <link rel="stylesheet" href="/bootstrap-4.3.1-dist/css/bootstrap.min.css">
+</head>
+<body>
+<!--图表展示区-->
+<div class="col-lg-9 col-md-9 container" style="background-color: #ffffff;margin-top:2%">
+    <div id="lineChart" style="height:670px;">
+
+    </div>
+</div>
+
+</body>
+
+<script src="/jquery-3.4.0.min.js"></script>
+<script src="/bootstrap-4.3.1-dist/js/bootstrap.min.js"></script>
+<script src="/echarts3/echarts.min.js"></script>
+<script type="text/javascript"></script>
+<script>
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('lineChart'));
+    option = {
+        title: {
+            text: '异常检测'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: []
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            startValue: '2014-06-01'
+        }, {
+            type: 'inside'
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 8,
+                color: '#096'
+            }, {
+                gt: 8,
+                color: '#ff0100'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        series: {
+            name: '异常检测',
+            type: 'line',
+            data: [],
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 20000
+                }]
+            }
+        }
+    };
+    myChart.setOption(option);
+</script>
+<script>
+    window.onload = function (ev) {
+        var dataList = {
+            timestamp:[],
+            value:[]
+        };
+        setInterval(function () {
+            $.ajax({
+                url: '/getData',
+                type: 'get',
+                data: {},
+                dateType: 'json',
+                success: function (result) {
+                    dataList.timestamp=dataList.timestamp.concat(result.timestamp);
+                    dataList.value=dataList.value.concat(result.value);
+                    var datalistLength=dataList.timestamp.length;
+                    if (datalistLength>20) {
+                        dataList.timestamp.shift(0,datalistLength-20);
+                        dataList.value.shift(0,datalistLength-20);
+                    }
+                    option = {
+
+                        xAxis: {
+                            data: dataList.timestamp
+                        },
+                        series: [
+                            {
+                                data: dataList.value
+                            }
+                        ]
+                    };
+                    myChart.setOption(option);
+                }
+            })
+        }, 1000);
+    }
+</script>
+</html>
